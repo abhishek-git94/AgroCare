@@ -26,3 +26,8 @@ body {
   padding: 20px;
   margin-bottom: 20px;
 }
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}

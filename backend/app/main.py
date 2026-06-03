@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import crop_doctor, weather, voice_assistant, government_schemes
+from app.api.v1 import crop_doctor, weather, voice_assistant, government_schemes, council
 from app.core.config import settings
 from app.core.security import verify_request
 
@@ -27,6 +27,7 @@ app.include_router(crop_doctor.router, prefix="/api/v1/crop-doctor", tags=["Crop
 app.include_router(weather.router, prefix="/api/v1/weather", tags=["Weather"])
 app.include_router(voice_assistant.router, prefix="/api/v1/voice", tags=["Voice Assistant"])
 app.include_router(government_schemes.router, prefix="/api/v1/schemes", tags=["Government Schemes"])
+app.include_router(council.router, prefix="/api/v1/council", tags=["Farming Council"])
 
 @app.get("/")
 def root():

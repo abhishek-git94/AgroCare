@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from app.services.weather_service import fetch_weather_by_location
 
 router = APIRouter()
 
@@ -6,9 +7,5 @@ router = APIRouter()
 @router.get("/alerts")
 def get_weather_alerts(location: str):
     """Return weather-driven agricultural alerts for the requested location."""
-    # TODO: call weather service and map agricultural risk alerts
-    return {
-        "location": location,
-        "alert": "Placeholder alert: no extreme weather detected.",
-        "recommendation": "Continue routine field monitoring.",
-    }
+    weather_data = fetch_weather_by_location(location)
+    return weather_data
