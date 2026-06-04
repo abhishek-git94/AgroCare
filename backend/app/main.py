@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import crop_doctor, weather, voice_assistant, government_schemes, council
 from app.core.config import settings
 from app.core.security import verify_request
+from app.ml_models.rag_pipeline import ingest_documents_dir
 
 app = FastAPI(
     title="AgroSentinel Genesis AI Backend",
@@ -28,6 +29,12 @@ app.include_router(weather.router, prefix="/api/v1/weather", tags=["Weather"])
 app.include_router(voice_assistant.router, prefix="/api/v1/voice", tags=["Voice Assistant"])
 app.include_router(government_schemes.router, prefix="/api/v1/schemes", tags=["Government Schemes"])
 app.include_router(council.router, prefix="/api/v1/council", tags=["Farming Council"])
+
+@app.on_event("startup")
+def load_documents():
+    count = ingest_documents_dir()
+    if count:
+        print(f"Ingested {count} chunks from documents/ folder")
 
 @app.get("/")
 def root():

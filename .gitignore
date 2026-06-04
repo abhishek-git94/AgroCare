@@ -20,3 +20,9 @@ yarn-error.log*
 *.sqlite3
 *.db
 *.log
+
+# ML model files (large, not tracked in git)
+*.keras
+*.h5
+*.pt
+models/
