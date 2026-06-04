@@ -35,7 +35,7 @@ def process_text(text: str, language: str = "hi") -> dict:
     lang_instruction = "Respond in Hindi." if language == "hi" else "Respond in English."
 
     completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="gpt-4.1-nano",
         messages=[
             {"role": "system", "content": f"{SYSTEM_PROMPT}\n{lang_instruction}"},
             {"role": "user", "content": text},

@@ -30,7 +30,7 @@ def recommend(crop: str = "paddy") -> dict:
     client = _get_client()
 
     completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="gpt-4.1-nano",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": f"Crop: {crop}"},

@@ -59,7 +59,14 @@ class CouncilManager:
             )
 
         if "weather" in self.agents:
-            expert_opinions["water_expert_opinion"] = "Weather data integration pending. Assume normal seasonal conditions."
+            from app.services.weather_service import fetch_weather_by_location
+            try:
+                location = context.get("location", "default")
+                weather = fetch_weather_by_location(location)
+                weather_text = f"Weather risk: {weather.get('weather_risk_level', 'Unknown')}. Alerts: {', '.join(weather.get('active_alerts', ['None']))}. Actions: {', '.join(weather.get('protective_actions', ['Routine monitoring']))}."
+            except Exception:
+                weather_text = "Weather service unavailable. Assume normal seasonal conditions."
+            expert_opinions["water_expert_opinion"] = weather_text
 
         expert_opinions["soil_expert_opinion"] = (
             "Soil analysis integration pending. General recommendation: "
@@ -70,7 +77,7 @@ class CouncilManager:
         opinions_text = "\n".join(f"- {k}: {v}" for k, v in expert_opinions.items())
 
         completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="gpt-4.1-nano",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": f"Farmer query: {query}\nCrop: {crop}\n\nExpert opinions:\n{opinions_text}"},

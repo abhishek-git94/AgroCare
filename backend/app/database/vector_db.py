@@ -4,6 +4,7 @@ import time
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 
+from chromadb.errors import NotFoundError
 from app.core.config import settings
 
 _client = None
@@ -37,7 +38,7 @@ def get_or_create_collection():
     db = _get_client()
     try:
         return db.get_collection(COLLECTION_NAME, embedding_function=_get_embedding_function())
-    except ValueError:
+    except (ValueError, NotFoundError):
         return db.create_collection(COLLECTION_NAME, embedding_function=_get_embedding_function())
 
 

@@ -35,7 +35,7 @@ def analyze(symptoms: str, crop: str = "paddy") -> dict:
     user_prompt = f"Crop: {crop}\nSymptoms observed: {symptoms}"
 
     completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="gpt-4.1-nano",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
