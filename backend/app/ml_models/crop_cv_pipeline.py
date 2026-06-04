@@ -116,6 +116,19 @@ def model_prediction(image_path, top_k=3):
     }
 
 
+import tempfile
+
+
+def analyze_image(image_bytes: bytes) -> dict:
+    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+        tmp.write(image_bytes)
+        temp_path = tmp.name
+    try:
+        return model_prediction(temp_path)
+    finally:
+        os.unlink(temp_path)
+
+
 if __name__ == "__main__":
     result = model_prediction(BASE_DIR / "AppleScab2.JPG")
 
