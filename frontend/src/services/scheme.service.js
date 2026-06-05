@@ -1,0 +1,5 @@
+import { apiFetch } from "./api";
+
+export const getSchemes = () => {
+  return apiFetch("/schemes");
+};
