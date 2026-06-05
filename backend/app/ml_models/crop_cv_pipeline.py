@@ -178,15 +178,3 @@ if __name__ == "__main__":
 
     for item in result["top_predictions"]:
         print(f"- {item['prediction']} : {item['confidence']}%")
-
-
-if __name__ == "__main__":
-    result = model_prediction(BASE_DIR / "AppleScab2.JPG")
-
-    print("Prediction :", result["prediction"])
-    print("Confidence :", result["confidence"], "%")
-    print()
-    print("Top predictions:")
-
-    for item in result["top_predictions"]:
-        print(f"- {item['prediction']} : {item['confidence']}%")
