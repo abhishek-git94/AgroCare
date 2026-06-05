@@ -14,10 +14,12 @@ def _get_llm_client():
         if settings.navigate_base_url:
             api_key = settings.navigate_api_key or settings.groq_api_key
             _llm_client = OpenAI(base_url=settings.navigate_base_url, api_key=api_key)
+        elif settings.openai_api_key:
+            _llm_client = OpenAI(api_key=settings.openai_api_key)
         elif settings.groq_api_key:
             _llm_client = Groq(api_key=settings.groq_api_key)
         else:
-            raise ValueError("Set groq_api_key or navigate_base_url in .env")
+            raise ValueError("No API key configured. Set openai_api_key, groq_api_key, or navigate_base_url in .env")
     return _llm_client
 
 
@@ -59,8 +61,9 @@ Return valid JSON only with these fields:
 - active_alerts: array of weather alert strings relevant to farming (empty if none)
 - protective_actions: array of actionable steps the farmer should take"""
 
+    model_name = "gpt-4o-mini" if isinstance(client, OpenAI) and not settings.navigate_base_url else "gpt-4.1-nano"
     completion = client.chat.completions.create(
-        model="gpt-4.1-nano",
+        model=model_name,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": f"Location: {location}"},
@@ -109,20 +112,26 @@ def _determine_risk(temp: float, humidity: float, wind: float, rain_1h: float) -
     alerts = []
     actions = set()
 
+    value_map = {
+        "temperature": temp,
+        "humidity": humidity,
+        "wind_speed": wind,
+        "rain_volume": rain_1h,
+    }
+
     for category, check, severity, advice in _AGRI_RISK_RULES:
-        value_map = {
-            "temperature": temp,
-            "humidity": humidity,
-            "wind_speed": wind,
-            "rain_volume": rain_1h,
-        }
         if check(value_map[category]):
+            parts = advice[0].split(". ", 1)
+            alert_text = parts[0]
+            action_text = parts[1] if len(parts) > 1 else parts[0]
             if severity == "High":
                 max_severity = "High"
-                alerts.append(advice[0])
+                alerts.append(alert_text)
+                actions.add(action_text)
             elif severity == "Moderate" and max_severity != "High":
                 max_severity = "Moderate"
-                alerts.append(advice[0])
+                alerts.append(alert_text)
+                actions.add(action_text)
 
     if not actions:
         actions.add("Routine field monitoring recommended")
