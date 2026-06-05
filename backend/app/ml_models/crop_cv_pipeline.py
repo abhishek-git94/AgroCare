@@ -1,17 +1,21 @@
 import os
+import io
+import tempfile
 from pathlib import Path
 
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 
 import numpy as np
 import tensorflow as tf
+from PIL import Image
 
 
 BASE_DIR = Path(__file__).resolve().parent
 
-# If you put this file in backend/app/ml_models, BASE_DIR will be that folder.
 MODEL_PATH = BASE_DIR / "trained_model_fixed.keras"
 IMAGE_SIZE = (128, 128)
+CONFIDENCE_THRESHOLD = 30.0
+MAX_IMAGE_SIZE_MB = 10
 
 CLASS_NAMES = [
     "Apple___Apple_scab",
@@ -89,8 +93,6 @@ def preprocess_image(image_path):
 
     input_arr = tf.keras.preprocessing.image.img_to_array(image)
 
-    # Important: your notebook trained with image_dataset_from_directory
-    # without Rescaling(1./255), so keep pixels in the 0..255 range.
     input_arr = np.expand_dims(input_arr, axis=0)
 
     return input_arr
@@ -116,17 +118,66 @@ def model_prediction(image_path, top_k=3):
     }
 
 
-import tempfile
+def validate_image(image_bytes: bytes) -> str | None:
+    if len(image_bytes) == 0:
+        return "Empty file"
+
+    if len(image_bytes) > MAX_IMAGE_SIZE_MB * 1024 * 1024:
+        return f"File too large (max {MAX_IMAGE_SIZE_MB}MB)"
+
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        img.verify()
+    except Exception:
+        return "Invalid or corrupted image file"
+
+    img = Image.open(io.BytesIO(image_bytes))
+    if img.mode not in ("RGB", "RGBA"):
+        return f"Unsupported color mode: {img.mode}. Expected RGB."
+
+    if img.width < 32 or img.height < 32:
+        return f"Image too small ({img.width}x{img.height}). Minimum 32x32 pixels."
+
+    return None
 
 
 def analyze_image(image_bytes: bytes) -> dict:
+    error = validate_image(image_bytes)
+    if error:
+        return {"error": error}
+
     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
         tmp.write(image_bytes)
         temp_path = tmp.name
+
     try:
-        return model_prediction(temp_path)
+        result = model_prediction(temp_path)
+
+        if result["confidence"] < CONFIDENCE_THRESHOLD:
+            result["warning"] = (
+                f"Low confidence ({result['confidence']}%). "
+                "Upload a clearer, well-lit image of the affected leaf."
+            )
+
+        crop, disease = result["prediction"].split("___", 1)
+        result["crop"] = crop
+        result["disease"] = "healthy" if "healthy" in disease.lower() else disease
+
+        return result
     finally:
         os.unlink(temp_path)
+
+
+if __name__ == "__main__":
+    result = model_prediction(BASE_DIR / "AppleScab2.JPG")
+
+    print("Prediction :", result["prediction"])
+    print("Confidence :", result["confidence"], "%")
+    print()
+    print("Top predictions:")
+
+    for item in result["top_predictions"]:
+        print(f"- {item['prediction']} : {item['confidence']}%")
 
 
 if __name__ == "__main__":
