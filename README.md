@@ -76,9 +76,9 @@ Configure `.env`:
 
 ```env
 groq_api_key = "gsk_..."
-navigate_base_url = "https://apidev.navigatelabsai.com"
+navigate_base_url = "....."
 navigate_api_key = "sk-..."
-openai_api_key = "sk-proj-..."
+openai_api_key = "s......"
 weather_api_key = "..."
 agmarknet_api_key = ""
 ```
